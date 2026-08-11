@@ -1,0 +1,13 @@
+sku_id,warehouse,on_hand_units,open_transfer_units,transfer_eta_days,supplier_lead_time_days,safety_stock_units,pack_size
+HOME-CLEAN-01,east,553,323,35,21,576,24
+HOME-CLEAN-01,west,1296,0,0,21,324,24
+HOME-CLEAN-02,east,1178,0,0,28,368,20
+HOME-CLEAN-02,west,1656,0,0,28,207,20
+LAUNDRY-01,east,1178,412,14,35,736,36
+LAUNDRY-01,west,994,0,0,35,414,36
+LAUNDRY-02,east,2074,0,0,21,432,24
+LAUNDRY-02,west,292,136,14,21,243,24
+KITCHEN-01,east,1690,0,0,42,264,12
+KITCHEN-01,west,1426,0,0,42,148,12
+BUNDLE-01,east,470,0,0,14,168,10
+BUNDLE-01,west,340,0,0,14,94,10
