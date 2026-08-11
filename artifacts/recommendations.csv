@@ -1,0 +1,13 @@
+sku_id,warehouse,on_hand_units,open_transfer_units,transfer_eta_days,supplier_lead_time_days,safety_stock_units,pack_size,weekly_forecast_units,history_weeks,scenario,effective_lead_time_days,usable_transfer_units,projected_at_replenishment_units,weeks_of_cover,recommended_order_units,risk,priority,recommended_action
+LAUNDRY-01,east,1178,412,14,35,736,36,648.9,12,base,35.0,412,-1654.5,2.5,3708,stockout,0,"Expedite supply and order 3,708 units"
+HOME-CLEAN-01,east,553,323,35,21,576,24,507.7,12,base,21.0,0,-970.1,1.1,2568,stockout,0,"Expedite supply and order 2,568 units"
+LAUNDRY-01,west,994,0,0,35,414,36,365.1,12,base,35.0,0,-831.5,2.7,1980,stockout,0,"Expedite supply and order 1,980 units"
+HOME-CLEAN-02,east,1178,0,0,28,368,20,327.6,12,base,28.0,0,-132.4,3.6,1160,stockout,0,"Expedite supply and order 1,160 units"
+LAUNDRY-02,west,292,136,14,21,243,24,202.9,12,base,21.0,136,-180.7,2.1,840,stockout,0,Expedite supply and order 840 units
+HOME-CLEAN-02,west,1656,0,0,28,207,20,176.7,12,base,28.0,0,949.2,9.4,0,excess,2,Pause replenishment and review demand plan
+KITCHEN-01,west,1426,0,0,42,148,12,128.7,12,base,42.0,0,653.8,11.1,0,excess,2,Pause replenishment and review demand plan
+HOME-CLEAN-01,west,1296,0,0,21,324,24,292.4,12,base,21.0,0,418.8,4.4,504,healthy,3,Monitor; no immediate action
+KITCHEN-01,east,1690,0,0,42,264,12,223.2,12,base,42.0,0,350.8,7.6,360,healthy,3,Monitor; no immediate action
+BUNDLE-01,east,470,0,0,14,168,10,141.0,12,base,14.0,0,188.0,3.3,270,healthy,3,Monitor; no immediate action
+LAUNDRY-02,east,2074,0,0,21,432,24,360.9,12,base,21.0,0,991.3,5.7,168,healthy,3,Monitor; no immediate action
+BUNDLE-01,west,340,0,0,14,94,10,78.8,12,base,14.0,0,182.4,4.3,70,healthy,3,Monitor; no immediate action

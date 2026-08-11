@@ -1,0 +1,9 @@
+{
+  "sku_warehouse_decisions": 12,
+  "stockout_count": 5,
+  "below_safety_count": 0,
+  "excess_count": 2,
+  "recommended_order_units": 11628,
+  "highest_priority_sku": "LAUNDRY-01",
+  "highest_priority_warehouse": "east"
+}
