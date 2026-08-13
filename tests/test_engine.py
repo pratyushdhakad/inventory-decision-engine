@@ -10,6 +10,7 @@ from inventory_decision_engine.engine import (
     validate_inputs,
 )
 from inventory_decision_engine.generate_data import generate_inputs
+from inventory_decision_engine.report import build_dashboard
 
 
 class InventoryDecisionEngineTests(unittest.TestCase):
@@ -53,6 +54,15 @@ class InventoryDecisionEngineTests(unittest.TestCase):
         duplicate = pd.concat([self.demand, self.demand.iloc[[0]]], ignore_index=True)
         with self.assertRaisesRegex(ValueError, "Demand keys must be unique"):
             validate_inputs(duplicate, self.inventory)
+
+    def test_dashboard_embeds_scenarios_and_decision_controls(self) -> None:
+        dashboard = Path(self.temp_dir.name) / "dashboard" / "index.html"
+        build_dashboard(self.demand, self.inventory, dashboard)
+        html = dashboard.read_text()
+        self.assertIn('data-scenario="promotion"', html)
+        self.assertIn('data-scenario="supplier_delay"', html)
+        self.assertIn("Planner decision queue", html)
+        self.assertIn("HOME-CLEAN-01", html)
 
 
 if __name__ == "__main__":
