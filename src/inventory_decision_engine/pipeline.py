@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .engine import build_recommendations, compare_scenarios
 from .generate_data import generate_inputs
+from .report import build_dashboard
 
 
 def run(root: Path = Path(".")) -> dict[str, object]:
@@ -19,6 +20,7 @@ def run(root: Path = Path(".")) -> dict[str, object]:
     scenarios = compare_scenarios(demand, inventory)
     recommendations.to_csv(artifact_dir / "recommendations.csv", index=False)
     scenarios.to_csv(artifact_dir / "scenario_summary.csv", index=False)
+    build_dashboard(demand, inventory, root / "dashboard" / "index.html")
 
     summary = {
         "sku_warehouse_decisions": int(len(recommendations)),
