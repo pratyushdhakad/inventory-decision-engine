@@ -1,27 +1,30 @@
 # Inventory Decision Engine
 
-An in-progress decision-support system that turns SKU demand, inventory, safety stock, transfers, and supplier lead times into explainable replenishment recommendations.
+An interactive decision-support system that turns SKU demand, inventory, safety stock, transfers, and supplier lead times into explainable replenishment recommendations.
+
+**[Open the live planner dashboard](https://pratyushdhakad.github.io/inventory-decision-engine/)**
 
 > Portfolio demonstration using synthetic data only. The operating logic is inspired by real planning problems, not copied from any employer system.
 
-## Day 2 build status
+## Day 3 build status
 
-The decision engine is live locally and covered by automated tests. It currently:
+The tested decision engine now powers a responsive planner cockpit. It currently:
 
 - generates reproducible 12-week SKU demand and inventory snapshots;
 - produces a blended four-week demand forecast;
 - credits inbound transfers only when they arrive inside the replenishment window;
 - classifies stockout, below-safety, healthy, and excess-inventory risk;
 - rounds suggested orders to supplier pack sizes; and
-- compares base, promotion, and supplier-delay scenarios.
-
-Next: add the decision-oriented dashboard, visual scenario controls, and a live demo.
+- compares base, promotion, and supplier-delay scenarios;
+- filters the decision queue by risk, SKU, or warehouse;
+- explains the inputs behind each recommended action; and
+- deploys the static dashboard automatically through GitHub Pages.
 
 ## The business question
 
 For each SKU and warehouse, what action should a planner take now—and why?
 
-The output is designed for a supply-chain or inventory owner who needs a short, auditable queue of decisions instead of another raw forecast export.
+The output is designed for a supply-chain or inventory owner who needs a short, auditable queue of decisions instead of another raw forecast export. The live dashboard makes scenario changes visible without hiding the assumptions behind them.
 
 ## Quick start
 
@@ -33,7 +36,7 @@ make test
 make run
 ```
 
-Generated outputs are written to `artifacts/`.
+Generated outputs are written to `artifacts/`, and the self-contained dashboard is written to `dashboard/index.html`.
 
 ## Decision flow
 
@@ -59,8 +62,9 @@ sql/                             portable inventory-position model
 tests/                           business-rule and pipeline tests
 data/                            deterministic synthetic inputs
 artifacts/                       generated recommendations and scenario summary
+dashboard/                       interactive planner cockpit and social preview
 docs/                            assumptions and decision rules
-.github/workflows/               continuous integration
+.github/workflows/               continuous integration and Pages deployment
 ```
 
 ## Current limitations
