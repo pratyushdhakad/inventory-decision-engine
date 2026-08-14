@@ -10,6 +10,8 @@ from inventory_decision_engine.engine import (
     validate_inputs,
 )
 from inventory_decision_engine.generate_data import generate_inputs
+from inventory_decision_engine.evaluation import summarize_backtest, walk_forward_backtest
+from inventory_decision_engine.impact import summarize_modeled_impact
 from inventory_decision_engine.report import build_dashboard
 
 
@@ -63,6 +65,35 @@ class InventoryDecisionEngineTests(unittest.TestCase):
         self.assertIn('data-scenario="supplier_delay"', html)
         self.assertIn("Planner decision queue", html)
         self.assertIn("HOME-CLEAN-01", html)
+        self.assertIn("Forecast trust check", html)
+        self.assertIn("Modeled decision exposure", html)
+
+    def test_walk_forward_backtest_uses_four_holdouts_per_series(self) -> None:
+        backtest = walk_forward_backtest(self.demand)
+        counts = backtest.groupby(["sku_id", "warehouse"]).size()
+        self.assertTrue((counts == 4).all())
+        summary = summarize_backtest(backtest)
+        self.assertEqual(summary["holdout_observations"], 48)
+        self.assertGreater(summary["forecast_accuracy_pct"], 0)
+        self.assertLessEqual(summary["forecast_accuracy_pct"], 100)
+
+    def test_backtest_prediction_does_not_use_holdout_actual(self) -> None:
+        baseline = walk_forward_backtest(self.demand)
+        changed = self.demand.copy()
+        target_index = changed.sort_values("week_start").index[-1]
+        changed.loc[target_index, "units_sold"] *= 20
+        revised = walk_forward_backtest(changed)
+        key = ["sku_id", "warehouse", "week_start", "predicted_units"]
+        baseline_predictions = baseline[key].sort_values(key[:3]).reset_index(drop=True)
+        revised_predictions = revised[key].sort_values(key[:3]).reset_index(drop=True)
+        pd.testing.assert_frame_equal(baseline_predictions, revised_predictions)
+
+    def test_modeled_impact_is_labeled_and_nonnegative(self) -> None:
+        recommendations = build_recommendations(self.demand, self.inventory)
+        impact = summarize_modeled_impact(recommendations)
+        self.assertGreater(impact["purchase_commitment_usd"], 0)
+        self.assertGreaterEqual(impact["excess_working_capital_usd"], 0)
+        self.assertIn("not realized", impact["interpretation"])
 
 
 if __name__ == "__main__":
