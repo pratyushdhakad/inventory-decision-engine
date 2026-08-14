@@ -1,0 +1,9 @@
+{
+  "holdout_observations": 48,
+  "sku_warehouse_series": 12,
+  "mean_absolute_error_units": 19.6,
+  "wape_pct": 6.8,
+  "forecast_accuracy_pct": 93.2,
+  "bias_pct": -4.0,
+  "method": "Walk-forward holdout; each prediction uses prior weeks only"
+}

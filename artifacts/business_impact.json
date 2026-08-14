@@ -1,0 +1,9 @@
+{
+  "actions_needing_review": 5,
+  "stockout_exposure_units": 3769,
+  "purchase_commitment_usd": 97267.6,
+  "excess_working_capital_usd": 8108.1,
+  "estimated_annual_holding_cost_usd": 1783.78,
+  "assumption": "Synthetic unit costs and a 22% annual holding-rate assumption",
+  "interpretation": "Decision exposure for review; not realized or guaranteed savings"
+}

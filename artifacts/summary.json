@@ -5,5 +5,8 @@
   "excess_count": 2,
   "recommended_order_units": 11628,
   "highest_priority_sku": "LAUNDRY-01",
-  "highest_priority_warehouse": "east"
+  "highest_priority_warehouse": "east",
+  "forecast_accuracy_pct": 93.2,
+  "modeled_purchase_commitment_usd": 97267.6,
+  "modeled_excess_working_capital_usd": 8108.1
 }
