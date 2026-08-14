@@ -18,6 +18,7 @@ INVENTORY_COLUMNS = {
     "supplier_lead_time_days",
     "safety_stock_units",
     "pack_size",
+    "unit_cost_usd",
 }
 SCENARIOS = {
     "base": {"demand_multiplier": 1.0, "lead_time_multiplier": 1.0},
@@ -46,6 +47,7 @@ def validate_inputs(demand: pd.DataFrame, inventory: pd.DataFrame) -> None:
         "supplier_lead_time_days",
         "safety_stock_units",
         "pack_size",
+        "unit_cost_usd",
     ]
     if (inventory[numeric_inventory] < 0).any().any() or (inventory["pack_size"] == 0).any():
         raise ValueError("Inventory quantities must be nonnegative and pack size must be positive")
@@ -144,6 +146,23 @@ def build_recommendations(
         int(math.ceil(units / pack) * pack) if units > 0 else 0
         for units, pack in zip(shortage, recommendations["pack_size"])
     ]
+    recommendations["recommended_order_value_usd"] = (
+        recommendations["recommended_order_units"] * recommendations["unit_cost_usd"]
+    ).round(2)
+    recommendations["stockout_exposure_units"] = (
+        -recommendations["projected_at_replenishment_units"]
+    ).clip(lower=0).round().astype(int)
+    recommendations["excess_units"] = (
+        recommendations["on_hand_units"]
+        + recommendations["usable_transfer_units"]
+        - recommendations["weekly_forecast_units"] * 8
+    ).clip(lower=0).round().astype(int)
+    recommendations["excess_working_capital_usd"] = (
+        recommendations["excess_units"] * recommendations["unit_cost_usd"]
+    ).round(2)
+    recommendations["estimated_annual_holding_cost_usd"] = (
+        recommendations["excess_working_capital_usd"] * 0.22
+    ).round(2)
     recommendations["risk"] = [
         _risk_label(projected, safety, cover)
         for projected, safety, cover in zip(

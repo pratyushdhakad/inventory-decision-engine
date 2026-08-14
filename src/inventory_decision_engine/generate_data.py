@@ -9,12 +9,12 @@ import pandas as pd
 
 
 PRODUCTS = {
-    "HOME-CLEAN-01": {"category": "home", "weekly_demand": 720, "lead_time_days": 21, "pack_size": 24},
-    "HOME-CLEAN-02": {"category": "home", "weekly_demand": 460, "lead_time_days": 28, "pack_size": 20},
-    "LAUNDRY-01": {"category": "laundry", "weekly_demand": 920, "lead_time_days": 35, "pack_size": 36},
-    "LAUNDRY-02": {"category": "laundry", "weekly_demand": 540, "lead_time_days": 21, "pack_size": 24},
-    "KITCHEN-01": {"category": "kitchen", "weekly_demand": 330, "lead_time_days": 42, "pack_size": 12},
-    "BUNDLE-01": {"category": "bundle", "weekly_demand": 210, "lead_time_days": 14, "pack_size": 10},
+    "HOME-CLEAN-01": {"category": "home", "weekly_demand": 720, "lead_time_days": 21, "pack_size": 24, "unit_cost_usd": 8.40},
+    "HOME-CLEAN-02": {"category": "home", "weekly_demand": 460, "lead_time_days": 28, "pack_size": 20, "unit_cost_usd": 11.25},
+    "LAUNDRY-01": {"category": "laundry", "weekly_demand": 920, "lead_time_days": 35, "pack_size": 36, "unit_cost_usd": 6.75},
+    "LAUNDRY-02": {"category": "laundry", "weekly_demand": 540, "lead_time_days": 21, "pack_size": 24, "unit_cost_usd": 9.10},
+    "KITCHEN-01": {"category": "kitchen", "weekly_demand": 330, "lead_time_days": 42, "pack_size": 12, "unit_cost_usd": 13.60},
+    "BUNDLE-01": {"category": "bundle", "weekly_demand": 210, "lead_time_days": 14, "pack_size": 10, "unit_cost_usd": 17.50},
 }
 
 WAREHOUSE_SHARE = {"east": 0.64, "west": 0.36}
@@ -76,6 +76,7 @@ def generate_inputs(output_dir: Path, seed: int = 41) -> tuple[pd.DataFrame, pd.
                     "supplier_lead_time_days": product["lead_time_days"],
                     "safety_stock_units": safety_stock,
                     "pack_size": product["pack_size"],
+                    "unit_cost_usd": product["unit_cost_usd"],
                 }
             )
 
