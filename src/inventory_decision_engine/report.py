@@ -9,6 +9,8 @@ from pathlib import Path
 import pandas as pd
 
 from .engine import SCENARIOS, build_recommendations
+from .evaluation import summarize_backtest, walk_forward_backtest
+from .impact import summarize_modeled_impact
 
 
 def _records(frame: pd.DataFrame) -> list[dict[str, object]]:
@@ -34,13 +36,18 @@ def build_dashboard(demand: pd.DataFrame, inventory: pd.DataFrame, output_path: 
                         "recommended_order_units",
                     ].sum()
                 ),
+                **summarize_modeled_impact(recommendations),
             },
         }
 
+    evaluation = summarize_backtest(walk_forward_backtest(demand))
     latest_week = escape(str(pd.to_datetime(demand["week_start"]).max().date()))
     payload = json.dumps(scenario_data, separators=(",", ":"))
-    html = DASHBOARD_TEMPLATE.replace("__SCENARIO_DATA__", payload).replace(
-        "__LATEST_WEEK__", latest_week
+    evaluation_payload = json.dumps(evaluation, separators=(",", ":"))
+    html = (
+        DASHBOARD_TEMPLATE.replace("__SCENARIO_DATA__", payload)
+        .replace("__EVALUATION_DATA__", evaluation_payload)
+        .replace("__LATEST_WEEK__", latest_week)
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
@@ -94,6 +101,18 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
     .metric .delta { color: var(--muted); font-size: 12px; }
     .metric.urgent { border-top: 4px solid var(--coral); }
     .metric.order { border-top: 4px solid var(--amber); }
+    .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .evidence-card { background: var(--navy); color: white; border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); }
+    .evidence-card.impact { background: #fffdf8; color: var(--ink); border: 1px solid var(--line); }
+    .evidence-card h2 { margin: 0 0 4px; font: 700 20px/1.1 Georgia, serif; }
+    .evidence-card > p { margin: 0 0 16px; color: #b6c8cf; font-size: 12px; }
+    .evidence-card.impact > p { color: var(--muted); }
+    .evidence-values { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .evidence-value { border-left: 1px solid #39515b; padding-left: 11px; }
+    .impact .evidence-value { border-left-color: var(--line); }
+    .evidence-value span { display: block; color: #b6c8cf; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .impact .evidence-value span { color: var(--muted); }
+    .evidence-value strong { display: block; margin-top: 4px; font-size: 18px; }
     .grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, .75fr); gap: 18px; align-items: start; }
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .panel-header { padding: 20px 22px 14px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -142,12 +161,14 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
       .freshness { text-align: left; }
       .scenario-buttons { width: 100%; }
       .metrics { grid-template-columns: repeat(2, 1fr); }
+      .evidence-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 580px) {
       .shell { padding: 16px; }
       .scenario-buttons { grid-template-columns: 1fr; }
       .metrics { grid-template-columns: 1fr; }
+      .evidence-values { grid-template-columns: repeat(2, 1fr); }
       .toolbar { align-items: stretch; }
       .search { margin-left: 0; width: 100%; }
       footer { flex-direction: column; }
@@ -179,6 +200,29 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
       <article class="metric"><span class="label">Below safety</span><strong class="value" id="safetyMetric">—</strong><span class="delta">Positive stock, inadequate buffer</span></article>
       <article class="metric order"><span class="label">Order recommendation</span><strong class="value" id="orderMetric">—</strong><span class="delta">Pack-rounded units across the network</span></article>
       <article class="metric"><span class="label">Excess positions</span><strong class="value" id="excessMetric">—</strong><span class="delta">More than eight forecast weeks</span></article>
+    </section>
+
+    <section class="evidence-grid" aria-label="Evaluation and modeled business exposure">
+      <article class="evidence-card">
+        <h2>Forecast trust check</h2>
+        <p>Walk-forward holdout: every prediction uses only the weeks available beforehand.</p>
+        <div class="evidence-values">
+          <div class="evidence-value"><span>Accuracy</span><strong id="accuracyEvidence">—</strong></div>
+          <div class="evidence-value"><span>WAPE</span><strong id="wapeEvidence">—</strong></div>
+          <div class="evidence-value"><span>Bias</span><strong id="biasEvidence">—</strong></div>
+          <div class="evidence-value"><span>Holdouts</span><strong id="holdoutEvidence">—</strong></div>
+        </div>
+      </article>
+      <article class="evidence-card impact">
+        <h2>Modeled decision exposure</h2>
+        <p>Synthetic unit costs + 22% annual holding rate. Exposure for review—not realized savings.</p>
+        <div class="evidence-values">
+          <div class="evidence-value"><span>Order value</span><strong id="purchaseEvidence">—</strong></div>
+          <div class="evidence-value"><span>Stockout units</span><strong id="stockoutUnitsEvidence">—</strong></div>
+          <div class="evidence-value"><span>Excess capital</span><strong id="excessCapitalEvidence">—</strong></div>
+          <div class="evidence-value"><span>Holding cost</span><strong id="holdingCostEvidence">—</strong></div>
+        </div>
+      </article>
     </section>
 
     <section class="grid">
@@ -218,6 +262,7 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
 
   <script>
     const scenarioData = __SCENARIO_DATA__;
+    const evaluationData = __EVALUATION_DATA__;
     const riskMeta = {
       stockout: {label: "Stockout", color: "#c94d3d"},
       below_safety: {label: "Below safety", color: "#c27b17"},
@@ -229,6 +274,7 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
     let searchTerm = "";
 
     const number = value => new Intl.NumberFormat("en-US", {maximumFractionDigits: 1}).format(value);
+    const currency = value => new Intl.NumberFormat("en-US", {style:"currency", currency:"USD", maximumFractionDigits:0}).format(value);
     const signed = value => `${value > 0 ? "+" : ""}${number(value)}`;
     const labelScenario = key => ({base:"Base plan", promotion:"Promotion", supplier_delay:"Supplier delay"})[key];
 
@@ -246,6 +292,10 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
       document.querySelector("#safetyMetric").textContent = summary.below_safety;
       document.querySelector("#orderMetric").textContent = number(summary.order_units);
       document.querySelector("#excessMetric").textContent = summary.excess;
+      document.querySelector("#purchaseEvidence").textContent = currency(summary.purchase_commitment_usd);
+      document.querySelector("#stockoutUnitsEvidence").textContent = number(summary.stockout_exposure_units);
+      document.querySelector("#excessCapitalEvidence").textContent = currency(summary.excess_working_capital_usd);
+      document.querySelector("#holdingCostEvidence").textContent = currency(summary.estimated_annual_holding_cost_usd);
     }
 
     function renderTable() {
@@ -283,6 +333,8 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
             <div class="fact"><span>On hand</span><strong>${number(row.on_hand_units)}</strong></div>
             <div class="fact"><span>Safety stock</span><strong>${number(row.safety_stock_units)}</strong></div>
             <div class="fact"><span>Lead time</span><strong>${number(row.effective_lead_time_days)} days</strong></div>
+            <div class="fact"><span>Modeled order value</span><strong>${currency(row.recommended_order_value_usd)}</strong></div>
+            <div class="fact"><span>Stockout exposure</span><strong>${number(row.stockout_exposure_units)} units</strong></div>
           </div>
           <p class="logic">${transferNote} The projected position is ${signed(row.projected_at_replenishment_units)} units when replenishment would arrive. The order suggestion covers lead-time demand, two operating weeks, and safety stock, rounded to packs of ${row.pack_size}.</p>
         </div>`;
@@ -314,7 +366,13 @@ DASHBOARD_TEMPLATE = r'''<!doctype html>
       }).join("");
     }
 
-    function renderAll() { renderMetrics(); renderTable(); renderRiskChart(); document.querySelector("#decisionDetail").innerHTML = '<div class="empty-detail">Select a row from the decision queue.</div>'; }
+    function renderEvaluation() {
+      document.querySelector("#accuracyEvidence").textContent = `${evaluationData.forecast_accuracy_pct}%`;
+      document.querySelector("#wapeEvidence").textContent = `${evaluationData.wape_pct}%`;
+      document.querySelector("#biasEvidence").textContent = `${evaluationData.bias_pct > 0 ? "+" : ""}${evaluationData.bias_pct}%`;
+      document.querySelector("#holdoutEvidence").textContent = evaluationData.holdout_observations;
+    }
+    function renderAll() { renderMetrics(); renderTable(); renderRiskChart(); renderEvaluation(); document.querySelector("#decisionDetail").innerHTML = '<div class="empty-detail">Select a row from the decision queue.</div>'; }
     document.querySelectorAll(".scenario-button").forEach(button => button.addEventListener("click", () => {
       activeScenario = button.dataset.scenario;
       document.querySelectorAll(".scenario-button").forEach(item => item.classList.toggle("active", item === button));
