@@ -6,7 +6,7 @@ An interactive decision-support system that turns SKU demand, inventory, safety 
 
 > Portfolio demonstration using synthetic data only. The operating logic is inspired by real planning problems, not copied from any employer system.
 
-## Day 3 build status
+## Day 4 build status
 
 The tested decision engine now powers a responsive planner cockpit. It currently:
 
@@ -18,7 +18,9 @@ The tested decision engine now powers a responsive planner cockpit. It currently
 - compares base, promotion, and supplier-delay scenarios;
 - filters the decision queue by risk, SKU, or warehouse;
 - explains the inputs behind each recommended action; and
-- deploys the static dashboard automatically through GitHub Pages.
+- deploys the static dashboard automatically through GitHub Pages;
+- evaluates forecast quality with 48 leakage-safe walk-forward holdouts; and
+- translates decisions into explicitly modeled purchase, stockout, and excess-capital exposure.
 
 ## The business question
 
@@ -54,6 +56,14 @@ flowchart LR
 
 I use AI as an engineering multiplier for implementation, edge-case generation, and documentation. I own the business framing, assumptions, architecture, validation rules, evaluation, and every published decision. Generated work is not accepted until it runs, passes tests, and can be explained.
 
+## Evaluation and impact guardrails
+
+- Forecast quality is measured out of sample with walk-forward holdouts; see [the evaluation notes](docs/forecast-evaluation.md).
+- The test suite includes an anti-leakage check that changes a holdout actual and confirms its prediction does not move.
+- Financial values use synthetic unit costs and a stated 22% annual holding-rate assumption.
+- Modeled exposure is presented for prioritization, not claimed as realized or guaranteed savings.
+- The [five-minute interview walkthrough](docs/interview-walkthrough.md) covers the problem, architecture, evaluation, value, and production trade-offs.
+
 ## Repository map
 
 ```text
@@ -72,7 +82,7 @@ docs/                            assumptions and decision rules
 - The forecast is deliberately interpretable; it does not model seasonality or causal promotion effects.
 - Order suggestions assume one supplier lead time and pack size per SKU/warehouse.
 - Recommendations support human review; they do not place purchase orders.
-- Service levels, carrying cost, minimum order quantities, and supplier capacity are future extensions.
+- Calibrated service levels, validated carrying and stockout costs, minimum order quantities, and supplier capacity are future extensions.
 
 ## License
 
