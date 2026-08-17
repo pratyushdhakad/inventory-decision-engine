@@ -17,3 +17,4 @@ jobs:
       - run: pip install -r requirements.txt
       - run: make test
       - run: make run
+      - run: git diff --exit-code
