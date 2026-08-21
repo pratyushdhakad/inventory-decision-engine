@@ -6,7 +6,7 @@ An interactive decision-support system that turns SKU demand, inventory, safety 
 
 > Portfolio demonstration using synthetic data only. The operating logic is inspired by real planning problems, not copied from any employer system.
 
-## Day 4 build status
+## Build status
 
 The tested decision engine now powers a responsive planner cockpit. It currently:
 
